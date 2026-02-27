@@ -462,10 +462,12 @@ function PatientList({ patients, assessments, onSelect, onAdd }) {
 
 // --- Patient Form ---
 function PatientForm({ patient, onSave, onCancel }) {
-  const [form, setForm] = useState(patient || {
+  const initPatient = patient || {
     id: generateId(), patientId:'', name:'', birthDate:'', sex:'', weight:'', height:'',
     guardianName:'', contact:'', doctor:'', firstVisitDate: new Date().toISOString().split('T')[0]
-  });
+  };
+  if(initPatient.birthDate && !initPatient.birthDateRaw) { initPatient.birthDateRaw = initPatient.birthDate.replace(/-/g,''); }
+  const [form, setForm] = useState(initPatient);
   const set = (k,v) => setForm(prev => ({...prev, [k]:v}));
   const age = calcAge(form.birthDate);
   const isKaup = age !== null && age < 6;
@@ -484,7 +486,15 @@ function PatientForm({ patient, onSave, onCancel }) {
             <Field label="氏名 *" half><input value={form.name} onChange={e=>set('name',e.target.value)} className={inputCls} placeholder="山田 太郎"/></Field>
           </div>
           <div className="flex gap-3">
-            <Field label="生年月日 *" half><input type="date" value={form.birthDate} onChange={e=>set('birthDate',e.target.value)} className={inputCls}/></Field>
+            <Field label="生年月日 *（8桁: 20180315）" half><input type="text" inputMode="numeric" maxLength={8} placeholder="20180315" value={form.birthDateRaw || ''} onChange={e=>{
+              const v = e.target.value.replace(/\D/g,'').slice(0,8);
+              set('birthDateRaw', v);
+              if(v.length===8){
+                const formatted = v.slice(0,4)+'-'+v.slice(4,6)+'-'+v.slice(6,8);
+                const d = new Date(formatted);
+                if(!isNaN(d.getTime())) set('birthDate', formatted);
+              } else { set('birthDate',''); }
+            }} className={inputCls}/>{form.birthDate && <div className="text-xs text-gray-500 mt-1">{form.birthDate}</div>}</Field>
             <Field label="性別" half>
               <div className="flex gap-2">
                 {[['M','男'],['F','女']].map(([v,l])=>(
