@@ -597,13 +597,13 @@ function AssessmentForm({ patient, existingAssessment, onSave, onCancel }) {
             onClick={handleModeToggle}
             onTouchStart={handleHoldStart} onTouchEnd={handleHoldEnd} onTouchCancel={handleHoldEnd}
             onMouseDown={handleHoldStart} onMouseUp={handleHoldEnd} onMouseLeave={handleHoldEnd}
-            className={`toggle-btn px-3 py-2 rounded-xl text-xs font-medium border relative overflow-hidden select-none ${patientMode?'bg-dental-500 text-white border-dental-500':'bg-white text-gray-600 border-gray-200'}`}
+            className={`toggle-btn px-3 py-2 rounded-xl text-xs font-medium border relative overflow-hidden select-none ${patientMode?'bg-dental-500 text-white border-dental-500':'bg-orange-500 text-white border-orange-500'}`}
             style={{WebkitUserSelect:'none',userSelect:'none'}}
           >
             {holdProgress > 0 && (
-              <div className="absolute inset-0 bg-white opacity-30" style={{width:`${holdProgress*100}%`,transition:'none'}}/>
+              <div className={`absolute inset-0 ${patientMode ? 'bg-blue-400' : 'bg-yellow-300'} opacity-40`} style={{width:`${holdProgress*100}%`,transition:'none'}}/>
             )}
-            <span className="relative z-10">{holdProgress > 0 ? '長押し中...' : (patientMode ? '医院モードへ' : '患者モードへ')}</span>
+            <span className="relative z-10">{holdProgress > 0 ? `切替中... ${Math.round(holdProgress*100)}%` : (patientMode ? '医院モードへ' : '患者モードへ')}</span>
           </button>
           <button onClick={handleSave} className="toggle-btn bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm">次へ →</button>
         </div>
@@ -713,6 +713,37 @@ function AssessmentForm({ patient, existingAssessment, onSave, onCancel }) {
 }
 
 // --- Management Plan ---
+function LongPressButton({ onAction, className, children, label }) {
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef(null);
+  const startRef = useRef(null);
+  const DURATION = 2000;
+  const start = () => {
+    startRef.current = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startRef.current;
+      const p = Math.min(elapsed / DURATION, 1);
+      setProgress(p);
+      if (p >= 1) { onAction(); setProgress(0); return; }
+      timerRef.current = requestAnimationFrame(animate);
+    };
+    timerRef.current = requestAnimationFrame(animate);
+  };
+  const end = () => {
+    if (timerRef.current) { cancelAnimationFrame(timerRef.current); timerRef.current = null; }
+    setProgress(0);
+  };
+  return (
+    <button onTouchStart={start} onTouchEnd={end} onTouchCancel={end}
+      onMouseDown={start} onMouseUp={end} onMouseLeave={end}
+      className={`relative overflow-hidden select-none ${className}`}
+      style={{WebkitUserSelect:'none',userSelect:'none'}}>
+      {progress > 0 && <div className="absolute inset-0 bg-white opacity-30" style={{width:`${progress*100}%`,transition:'none'}}/>}
+      <span className="relative z-10">{progress > 0 ? `${Math.round(progress*100)}%...` : (label || children)}</span>
+    </button>
+  );
+}
+
 function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
   const [plans, setPlans] = useState(() => {
     const initial = {};
@@ -742,7 +773,7 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
       <Header title="管理計画書" onBack={onBack} rightAction={
         <div className="flex gap-2">
           <button onClick={handleSave} className="toggle-btn bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm">保存</button>
-          <button onClick={()=>{handleSave();onPrint();}} className="toggle-btn bg-dental-600 text-white px-4 py-2 rounded-xl font-medium text-sm">PDF出力</button>
+          <LongPressButton onAction={()=>{handleSave();onPrint();}} className="toggle-btn bg-dental-600 text-white px-4 py-2 rounded-xl font-medium text-sm" label="PDF出力"/>
         </div>
       }/>
       <div className="p-4 max-w-2xl mx-auto">
@@ -815,9 +846,7 @@ function PrintView({ patient, assessment, onClose }) {
     <div>
       <div className="no-print bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-50">
         <button onClick={onClose} className="text-primary-600 font-medium">← 戻る</button>
-        <button onClick={()=>window.print()} className="bg-dental-600 text-white px-6 py-2 rounded-xl font-medium text-sm">
-          PDF保存 / 印刷
-        </button>
+        <LongPressButton onAction={()=>window.print()} className="bg-dental-600 text-white px-6 py-2 rounded-xl font-medium text-sm" label="PDF保存 / 印刷"/>
       </div>
 
       {/* Page 1: チェックシート */}
@@ -926,7 +955,28 @@ function PrintView({ patient, assessment, onClose }) {
 }
 
 // --- Patient Detail ---
-function PatientDetail({ patient, assessments, onBack, onEdit, onNewAssessment, onSelectAssessment }) {
+function PatientDetail({ patient, assessments, onBack, onEdit, onNewAssessment, onSelectAssessment, onDeleteAssessment }) {
+  const [deleteHold, setDeleteHold] = useState(null);
+  const [deleteProgress, setDeleteProgress] = useState(0);
+  const deleteTimerRef = useRef(null);
+  const deleteStartRef = useRef(null);
+  const DELETE_DURATION = 2000;
+  const handleDeleteStart = (aId) => {
+    setDeleteHold(aId);
+    deleteStartRef.current = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - deleteStartRef.current;
+      const progress = Math.min(elapsed / DELETE_DURATION, 1);
+      setDeleteProgress(progress);
+      if (progress >= 1) { onDeleteAssessment(aId); setDeleteHold(null); setDeleteProgress(0); return; }
+      deleteTimerRef.current = requestAnimationFrame(animate);
+    };
+    deleteTimerRef.current = requestAnimationFrame(animate);
+  };
+  const handleDeleteEnd = () => {
+    if (deleteTimerRef.current) { cancelAnimationFrame(deleteTimerRef.current); deleteTimerRef.current = null; }
+    setDeleteHold(null); setDeleteProgress(0);
+  };
   const age = calcAge(patient.birthDate);
   const patientAssessments = assessments.filter(a => a.patientId === patient.id).sort((a,b) => new Date(b.date) - new Date(a.date));
 
@@ -966,12 +1016,25 @@ function PatientDetail({ patient, assessments, onBack, onEdit, onNewAssessment, 
             return v===true;
           }).length;
           return (
-            <button key={a.id} onClick={()=>onSelectAssessment(a)} className="w-full text-left bg-white rounded-2xl p-4 mb-3 card-shadow active:bg-gray-50 transition">
-              <div className="flex justify-between items-center">
-                <div className="text-sm font-medium text-gray-800">{formatDate(a.date)}</div>
-                <span className="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-lg">該当 {checkedCount}項目</span>
-              </div>
-            </button>
+            <div key={a.id} className="flex items-center gap-2 mb-3">
+              <button onClick={()=>onSelectAssessment(a)} className="flex-1 text-left bg-white rounded-2xl p-4 card-shadow active:bg-gray-50 transition">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-medium text-gray-800">{formatDate(a.date)}</div>
+                  <span className="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-lg">該当 {checkedCount}項目</span>
+                </div>
+              </button>
+              <button
+                onTouchStart={()=>handleDeleteStart(a.id)} onTouchEnd={handleDeleteEnd} onTouchCancel={handleDeleteEnd}
+                onMouseDown={()=>handleDeleteStart(a.id)} onMouseUp={handleDeleteEnd} onMouseLeave={handleDeleteEnd}
+                className="relative overflow-hidden toggle-btn px-3 py-3 rounded-xl text-xs font-medium bg-red-50 text-red-500 border border-red-200 select-none shrink-0"
+                style={{WebkitUserSelect:'none',userSelect:'none'}}
+              >
+                {deleteHold === a.id && deleteProgress > 0 && (
+                  <div className="absolute inset-0 bg-red-500 opacity-30" style={{width:`${deleteProgress*100}%`,transition:'none'}}/>
+                )}
+                <span className="relative z-10">{deleteHold === a.id && deleteProgress > 0 ? '削除中...' : '削除'}</span>
+              </button>
+            </div>
           );
         })}
       </div>
@@ -1093,6 +1156,15 @@ function App() {
     setCurrentAssessment(a);
   };
 
+  const deleteAssessment = (aId) => {
+    setData(prev => ({
+      ...prev,
+      assessments: prev.assessments.filter(a => a.id !== aId)
+    }));
+    // Delete from Firestore
+    try { db.collection('assessments').doc(aId).delete(); } catch(e) { console.log('Firestore delete error', e); }
+  };
+
   const deletePatient = (id) => {
     if(!confirm('この患者データを削除しますか？')) return;
     setData(prev => ({
@@ -1125,7 +1197,8 @@ function App() {
       onBack={()=>setPage('list')}
       onEdit={()=>{setEditingPatient(currentPatient);setPage('form');}}
       onNewAssessment={()=>{setCurrentAssessment(null);setPage('assessment');}}
-      onSelectAssessment={a=>{setCurrentAssessment(a);setPage('plan');}}/>;
+      onSelectAssessment={a=>{setCurrentAssessment(a);setPage('plan');}}
+      onDeleteAssessment={deleteAssessment}/>;
   }
 
   if (page === 'assessment' && currentPatient) {
