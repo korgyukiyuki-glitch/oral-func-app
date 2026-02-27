@@ -804,6 +804,7 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
       <Header title="管理計画書" onBack={onBack} rightAction={
         <div className="flex gap-2">
           <LongPressButton onAction={handleSave} className="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm" label="保存"/>
+          {saveMsg && <span className="text-green-600 text-xs font-medium self-center">保存済み</span>}
           <button onClick={()=>{handleSave();onPrint();}} className="toggle-btn bg-dental-600 text-white px-4 py-2 rounded-xl font-medium text-sm">PDF出力</button>
         </div>
       }/>
@@ -1071,7 +1072,10 @@ function PatientDetail({ patient, assessments, onBack, onEdit, onNewAssessment, 
               <button onClick={()=>onSelectAssessment(a)} className="flex-1 text-left bg-white rounded-2xl p-4 card-shadow active:bg-gray-50 transition">
                 <div className="flex justify-between items-center">
                   <div className="text-sm font-medium text-gray-800">{formatDate(a.date)}</div>
-                  <span className="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-lg">該当 {checkedCount}項目</span>
+                  <div className="flex items-center gap-2">
+                    {a.plans && Object.keys(a.plans).length > 0 && <span className="text-green-600 text-xs font-medium">保存済み</span>}
+                    <span className="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-lg">該当 {checkedCount}項目</span>
+                  </div>
                 </div>
               </button>
               <button
