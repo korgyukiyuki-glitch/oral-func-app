@@ -770,7 +770,20 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
     });
     return initial;
   });
-  const [overallPlan, setOverallPlan] = useState(assessment.overallPlan || '1. 原因因子の除去\n2. 口腔機能訓練（MFT）\n3. 咬合誘導\n4. カリエス予防管理\n5. 3か月毎再評価');
+  const [overallPlan, setOverallPlan] = useState(() => {
+    if (assessment.overallPlan) return assessment.overallPlan;
+    const codes = Object.keys(plans);
+    const lines = [];
+    const has = (arr) => arr.some(c => codes.includes(c));
+    if (has(['C1','C2','C3','C4','C5','C6'])) lines.push('噛む機能の改善と咬合育成を行います。');
+    if (has(['C7','C9','C12'])) lines.push('舌の機能訓練（MFT）を実施します。');
+    if (has(['C10','C15','C16'])) lines.push('鼻呼吸への改善指導を行い、必要に応じて耳鼻科受診のご案内や上あごを広げる装置をご提案します。');
+    if (has(['C11'])) lines.push('口腔習癖の除去指導を行います。');
+    if (has(['C8'])) lines.push('食事・間食指導を行います。');
+    if (has(['C13'])) lines.push('栄養指導と体格管理を行います。');
+    lines.push('3か月ごとに再評価を行います。');
+    return lines.map((l,i) => `${i+1}. ${l}`).join('\n');
+  });
   const [notes, setNotes] = useState(assessment.notes || '');
   const [saveMsg, setSaveMsg] = useState(false);
 
