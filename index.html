@@ -773,7 +773,7 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
       <Header title="管理計画書" onBack={onBack} rightAction={
         <div className="flex gap-2">
           <button onClick={handleSave} className="toggle-btn bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm">保存</button>
-          <LongPressButton onAction={()=>{handleSave();onPrint();}} className="toggle-btn bg-dental-600 text-white px-4 py-2 rounded-xl font-medium text-sm" label="PDF出力"/>
+          <button onClick={()=>{handleSave();onPrint();}} className="toggle-btn bg-dental-600 text-white px-4 py-2 rounded-xl font-medium text-sm">PDF出力</button>
         </div>
       }/>
       <div className="p-4 max-w-2xl mx-auto">
