@@ -95,10 +95,11 @@ const HABITS_LIST = [
 
 const CATEGORY_LABELS = {
   chew: '食べる機能（咀嚼）',
+  swallow: '食べる機能（嚥下）',
   eat: '食べる機能（食行動）',
   speak: '話す機能',
-  other: '呼吸・その他の機能',
-  body: '全身状態'
+  other: 'その他',
+  body: '栄養（体格）'
 };
 
 const PLAN_TEMPLATES = {
@@ -590,7 +591,7 @@ function AssessmentForm({ patient, existingAssessment, onSave, onCancel }) {
     });
   };
 
-  const categories = ['chew','eat','speak','other','body'];
+  const categories = ['chew','swallow','eat','speak','body','other'];
   const filteredItems = patientMode ? CHECK_ITEMS.filter(i => i.type === 'patient') : CHECK_ITEMS;
 
   return (
