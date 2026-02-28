@@ -85,6 +85,7 @@ const CHECK_ITEMS = [
   { code:'C14', label:'口呼吸がある', category:'other', type:'patient', inputType:'yesno' },
   { code:'C15', label:'口蓋扁桃等に肥大がある', category:'other', type:'clinic', inputType:'toggle' },
   { code:'C16', label:'睡眠時のいびきがある', category:'other', type:'patient', inputType:'yesno' },
+  { code:'C17', label:'上記以外の問題点', category:'other', type:'clinic', inputType:'freetext' },
 ];
 
 const HABITS_LIST = [
@@ -440,6 +441,7 @@ function PatientList({ patients, assessments, onSelect, onAdd }) {
           const checkedCount = lastAsmt ? Object.entries(lastAsmt.checks).filter(([k,v]) => {
             if (k === 'C11') return v && v.length > 0;
             if (k === 'C13') return v === 'underweight' || v === 'overweight';
+            if (k === 'C17') return v && v.length > 0;
             return v === true;
           }).length : 0;
           return (
@@ -540,7 +542,7 @@ function AssessmentForm({ patient, existingAssessment, onSave, onCancel }) {
 
   const [checks, setChecks] = useState(existingAssessment?.checks || {
     C1:false,C2:false,C3:false,C4:false,C5:false,C6:false,C7:false,C8:false,
-    C9:false,C10:false,C11:[],C11_has:existingAssessment?.checks?.C11?.length > 0 ? true : null,C12:false,C13:bodyStatus,C13_patient:null,C14:false,C15:false,C16:false
+    C9:false,C10:false,C11:[],C11_has:existingAssessment?.checks?.C11?.length > 0 ? true : null,C12:false,C13:bodyStatus,C13_patient:null,C14:false,C15:false,C16:false,C17:''
   });
   const [lipForce, setLipForce] = useState(existingAssessment?.lipForce || '');
   const [tonguePressure, setTonguePressure] = useState(existingAssessment?.tonguePressure || '');
@@ -663,6 +665,17 @@ function AssessmentForm({ patient, existingAssessment, onSave, onCancel }) {
                         </div>
                       )}
                     </div>
+                    {item.inputType === 'freetext' && (
+                      <div className="mt-2 w-full">
+                        <textarea
+                          value={checks[item.code] || ''}
+                          onChange={e=>setChecks(prev=>({...prev,[item.code]:e.target.value}))}
+                          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                          rows={2}
+                          placeholder="具体的な問題点を記入してください"
+                        />
+                      </div>
+                    )}
                     {item.inputType === 'habits' && (
                       <div className="mt-3">
                         <div className="text-xs text-gray-400 mb-2">お口に関する癖（指しゃぶり・舌の癖・唇を噛むなど）がありますか？</div>
@@ -765,7 +778,7 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
   const [plans, setPlans] = useState(() => {
     const initial = {};
     Object.entries(assessment.checks).forEach(([code, val]) => {
-      const isChecked = code === 'C11' ? (val && val.length > 0) : code === 'C13' ? (val === 'underweight' || val === 'overweight') : val === true;
+      const isChecked = code === 'C11' ? (val && val.length > 0) : code === 'C13' ? (val === 'underweight' || val === 'overweight') : code === 'C17' ? (val && val.length > 0) : val === true;
       if (isChecked && PLAN_TEMPLATES[code]) {
         initial[code] = assessment.plans?.[code] || { ...PLAN_TEMPLATES[code] };
       }
@@ -938,6 +951,7 @@ function PrintView({ patient, assessment, onClose }) {
               let isPositive = false;
               if (item.code === 'C11') { isPositive = val && val.length > 0; result = isPositive ? val.join(', ') : '該当なし'; }
               else if (item.code === 'C13') { isPositive = val==='underweight'||val==='overweight'; result = val==='normal'?'正常':val==='underweight'?'やせ':'肥満'; }
+              else if (item.code === 'C17') { isPositive = val && val.length > 0; result = isPositive ? '該当' : '-'; }
               else { isPositive = val === true; result = val === true ? '該当' : '非該当'; }
               return (
                 <tr key={item.code} style={{background: isPositive ? '#fef2f2' : i%2===0 ? '#fff' : '#f9fafb'}}>
@@ -951,6 +965,9 @@ function PrintView({ patient, assessment, onClose }) {
         </table>
         {assessment.checks.C11 && assessment.checks.C11.length > 0 && (
           <div style={{fontSize:'11px',marginTop:'4px',color:'#666'}}>C11 口腔習癖: {assessment.checks.C11.join('、')}</div>
+        )}
+        {assessment.checks.C17 && (
+          <div style={{fontSize:'11px',marginTop:'4px',color:'#666'}}>C17 上記以外の問題点: {assessment.checks.C17}</div>
         )}
       </div>
 
@@ -1076,6 +1093,7 @@ function PatientDetail({ patient, assessments, onBack, onEdit, onNewAssessment, 
           const checkedCount = Object.entries(a.checks).filter(([k,v])=>{
             if(k==='C11') return v&&v.length>0;
             if(k==='C13') return v==='underweight'||v==='overweight';
+            if(k==='C17') return v&&v.length>0;
             return v===true;
           }).length;
           return (
