@@ -797,7 +797,11 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
     setTimeout(() => setSaveMsg(false), 2500);
   };
 
-  const checkedCodes = Object.keys(plans);
+  const checkedCodes = Object.keys(plans).sort((a,b) => {
+    const numA = parseInt(a.replace('C',''));
+    const numB = parseInt(b.replace('C',''));
+    return numA - numB;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -862,7 +866,7 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
         })}
 
         <div className="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
-          <div className="bg-gray-700 text-white px-4 py-2 text-sm font-bold">C-17 総合管理計画</div>
+          <div className="bg-gray-700 text-white px-4 py-2 text-sm font-bold">総合管理計画</div>
           <div className="p-4">
             <textarea value={overallPlan} onChange={e=>setOverallPlan(e.target.value)}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none" rows={6}/>
@@ -885,7 +889,11 @@ function PrintView({ patient, assessment, onClose }) {
   const isKaup = age !== null && age < 6;
   const idx = isKaup ? calcKaup(parseFloat(patient.weight), parseFloat(patient.height)) : calcRohrer(parseFloat(patient.weight), parseFloat(patient.height));
   const plans = assessment.plans || {};
-  const checkedCodes = Object.keys(plans);
+  const checkedCodes = Object.keys(plans).sort((a,b) => {
+    const numA = parseInt(a.replace('C',''));
+    const numB = parseInt(b.replace('C',''));
+    return numA - numB;
+  });
 
   return (
     <div>
@@ -987,7 +995,7 @@ function PrintView({ patient, assessment, onClose }) {
         )}
 
         <div style={{border:'2px solid #374151',borderRadius:'8px',padding:'12px',marginBottom:'12px'}}>
-          <h3 style={{fontSize:'13px',fontWeight:'bold',marginBottom:'8px',color:'#374151'}}>C-17 総合管理計画</h3>
+          <h3 style={{fontSize:'13px',fontWeight:'bold',marginBottom:'8px',color:'#374151'}}>総合管理計画</h3>
           <div style={{fontSize:'12px',whiteSpace:'pre-line'}}>{assessment.overallPlan || ''}</div>
         </div>
 
