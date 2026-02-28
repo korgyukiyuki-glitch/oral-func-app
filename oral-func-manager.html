@@ -71,19 +71,21 @@ try {
 const CHECK_ITEMS = [
   { code:'C1', label:'歯の萌出に遅れがある', category:'chew', type:'clinic', inputType:'toggle' },
   { code:'C2', label:'機能的因子による歯列・咬合の異常がある', category:'chew', type:'clinic', inputType:'toggle' },
-  { code:'C3', label:'咀嚼に影響するう蝕がある（C3以上）', category:'chew', type:'clinic', inputType:'toggle' },
+  { code:'C3', label:'咨噬に影響するう蝕がある（C3以上）', category:'chew', type:'clinic', inputType:'toggle' },
   { code:'C4', label:'強く咬みしめられない', category:'chew', type:'clinic', inputType:'toggle' },
-  { code:'C5', label:'咀嚼回数が30回以下', category:'chew', type:'patient', inputType:'yesno' },
-  { code:'C6', label:'片側だけで食べている', category:'chew', type:'patient', inputType:'yesno' },
-  { code:'C7', label:'舌の突出癖がある', category:'other', type:'clinic', inputType:'toggle' },
-  { code:'C8', label:'食事は1日3回・決まった量を食べられていない', category:'eat', type:'patient', inputType:'yesno' },
-  { code:'C9', label:'会話時に聞き取りづらい', category:'speak', type:'patient', inputType:'yesno' },
-  { code:'C10', label:'口を開けている・口呼吸がある', category:'other', type:'patient', inputType:'yesno' },
-  { code:'C11', label:'口腔習癖がある', category:'other', type:'patient', inputType:'habits' },
-  { code:'C12', label:'舌小帯に異常がある', category:'other', type:'clinic', inputType:'toggle' },
+  { code:'C5', label:'咨噬時間が長すぎる、短すぎる', category:'chew', type:'patient', inputType:'yesno' },
+  { code:'C6', label:'偏咨噬がある', category:'chew', type:'patient', inputType:'yesno' },
+  { code:'C7', label:'舌の突出（乳児嚥下の残存）がみられる', category:'swallow', type:'clinic', inputType:'toggle' },
+  { code:'C8', label:'哺乳量・食べる量、回数が多すぎたり少なすぎたりムラがある等', category:'eat', type:'patient', inputType:'yesno' },
+  { code:'C9', label:'構音に障害がある（音の置換、省略、歪み等がある）', category:'speak', type:'clinic', inputType:'toggle' },
+  { code:'C10', label:'口唇の閉鎖不全がある（安静時に口唇閉鎖を認めない）', category:'speak', type:'clinic', inputType:'toggle' },
+  { code:'C11', label:'口腔習癖がある', category:'speak', type:'patient', inputType:'habits' },
+  { code:'C12', label:'舌小帯に異常がある', category:'speak', type:'clinic', inputType:'toggle' },
   { code:'C13', label:'やせ、または肥満である', category:'body', type:'patient', inputType:'body' },
-  { code:'C15', label:'口蓋扁桃肥大を認める', category:'other', type:'clinic', inputType:'toggle' },
-  { code:'C16', label:'いびきをかく', category:'other', type:'patient', inputType:'yesno' },
+  { code:'C14', label:'口呼吸がある', category:'other', type:'patient', inputType:'yesno' },
+  { code:'C15', label:'口蓋扁桃等に肥大がある', category:'other', type:'clinic', inputType:'toggle' },
+  { code:'C16', label:'睡眠時のいびきがある', category:'other', type:'patient', inputType:'yesno' },
+  { code:'C17', label:'上記以外の問題点', category:'other', type:'clinic', inputType:'toggle' },
 ];
 
 const HABITS_LIST = [
@@ -92,29 +94,32 @@ const HABITS_LIST = [
 ];
 
 const CATEGORY_LABELS = {
-  chew: '食べる機能（咀嚼）',
+  chew: '食べる機能（咨噬）',
+  swallow: '食べる機能（嚥下）',
   eat: '食べる機能（食行動）',
-  speak: '話す機能',
+  speak: '話す機能（構音）',
   other: '呼吸・その他の機能',
   body: '全身状態'
 };
 
 const PLAN_TEMPLATES = {
-  C1:  { problem:'萌出遅延による咀嚼機能未成熟・顎発育への影響', shortTerm:'萌出経過観察（3〜6か月毎）、X線評価、保護者説明', longTerm:'保隙管理、顎発育評価、必要時矯正相談' },
-  C2:  { problem:'口呼吸・舌癖・低位舌による不正咬合リスク', shortTerm:'口唇閉鎖力・舌圧測定、MFT開始、鼻呼吸指導', longTerm:'機能改善後の矯正適応判断' },
-  C3:  { problem:'疼痛・片側咀嚼の誘発', shortTerm:'早期治療（保存または抜歯）、疼痛除去', longTerm:'咀嚼トレーニング、フッ化物応用、カリエスリスク管理' },
-  C4:  { problem:'咬合力低下による顎発達不良', shortTerm:'咀嚼訓練（段階的負荷）', longTerm:'咬合誘導、必要時矯正連携' },
-  C5:  { problem:'顎成長不足・食塊形成不良', shortTerm:'30回咀嚼指導、家族への食育指導', longTerm:'食形態指導、3か月毎再評価' },
-  C6:  { problem:'顎偏位・顔面非対称', shortTerm:'左右均等咀嚼指導、咬合干渉確認', longTerm:'機能訓練、矯正相談' },
-  C7:  { problem:'舌運動制限・構音障害', shortTerm:'舌運動訓練', longTerm:'改善乏しければ小帯切除検討' },
-  C8:  { problem:'う蝕リスク増加', shortTerm:'間食指導、飲料指導、保護者カウンセリング', longTerm:'' },
-  C9:  { problem:'舌機能低下の可能性', shortTerm:'舌圧検査、MFT、必要時言語聴覚士紹介', longTerm:'' },
-  C10: { problem:'歯列狭窄・上顎劣成長', shortTerm:'鼻呼吸訓練、耳鼻科紹介検討', longTerm:'上顎拡大適応評価' },
-  C11: { problem:'歯列不正誘発', shortTerm:'習癖除去指導、トレーニング表作成、保護者連携', longTerm:'' },
-  C12: { problem:'舌小帯異常による機能制限', shortTerm:'舌機能評価、訓練', longTerm:'必要時外科的対応' },
-  C13: { problem:'全身発育と口腔機能への影響', shortTerm:'BMI算出、食事記録指導、小児科連携', longTerm:'' },
-  C15: { problem:'口呼吸・睡眠障害', shortTerm:'耳鼻科紹介、睡眠時無呼吸評価', longTerm:'' },
-  C16: { problem:'睡眠の質低下・顎発育への影響', shortTerm:'睡眠評価、口呼吸改善、専門医紹介', longTerm:'' },
+  C1:  { problem:'歯の生え変わりが遅れており、噌む力の発達やあごの成長に影響する可能性があります。', shortTerm:'3～6か月ごとに歯の生え具合とレントゲンで経過を確認します。', longTerm:'永久歯のスペース管理とあごの成長確認を行い、必要に応じて矯正をご提案します。' },
+  C2:  { problem:'口呼吸や舌の癖により、歯並び・かみ合わせが乱れるおそれがあります。', shortTerm:'くちびる・舌の力を測定し、お口の筋肉トレーニング（MFT）と鼻呼吸の練習を始めます。', longTerm:'機能改善後に矯正治療の必要性を判断します。' },
+  C3:  { problem:'むし歯の痛みにより、片側だけで噌む癖がつきやすい状態です。', shortTerm:'むし歯の治療を優先し、痛みを取り除きます。', longTerm:'噌む練習とフッ素を活用したむし歯予防を続けます。' },
+  C4:  { problem:'噌む力が弱く、あごの発達が十分に進みにくい状態です。', shortTerm:'やわらかいものから段階的に硬さを上げる噌む練習を行います。', longTerm:'かみ合わせの調整を行い、必要に応じて矯正治療と連携します。' },
+  C5:  { problem:'咨噬時間が適切でなく、食塊形成やあごの発達に影響する可能性があります。', shortTerm:'適切な咨噬時間・回数の指導を行い、食形態の見直しを提案します。', longTerm:'3か月ごとに再評価し、咨噬機能の改善を確認します。' },
+  C6:  { problem:'片側だけで噌む癖があり、あごのずれや顔の左右差につながるおそれがあります。', shortTerm:'左右バランスよく噌む練習と、かみ合わせの確認を行います。', longTerm:'機能訓練を継続し、必要に応じて矯正をご提案します。' },
+  C7:  { problem:'舌の突出（乳児嚥下の残存）がみられ、嚥下機能や歯並びに影響する可能性があります。', shortTerm:'舌を動かすトレーニングを行います。', longTerm:'改善が不十分な場合、切除手術を検討します。' },
+  C8:  { problem:'哺乳量や食事の量・回数にムラがあり、栄養摂取や口腔機能の発達に影響する可能性があります。', shortTerm:'食事・間食の回数やタイミング・飲み物の選び方を指導します。', longTerm:'成長に合わせた食事指導を継続し、定期的に再評価します。' },
+  C9:  { problem:'構音に障害があり、音の置換・省略・歪み等がみられます。', shortTerm:'舌の力の検査とお口の筋肉トレーニング（MFT）を行います。', longTerm:'改善が不十分な場合、言語聴覚士との連携を検討します。' },
+  C10: { problem:'安静時に口唇の閉鎖が認められず、口腔機能の発達に影響する可能性があります。', shortTerm:'口唇閉鎖力の測定と口唇トレーニングを開始します。', longTerm:'改善状況を評価し、必要に応じて装置の使用を検討します。' },
+  C11: { problem:'指しゃぶり等の癖が歯並びを乱す原因になっています。', shortTerm:'癖をなくす指導とトレーニング表をお渡しし、ご家庭と連携して改善を目指します。', longTerm:'習癖除去後の歯列変化を経過観察します。' },
+  C12: { problem:'舌の裏のすじに異常があり、舌の機能が制限されています。', shortTerm:'舌の機能を評価しトレーニングを行います。', longTerm:'改善不十分な場合は外科的処置を検討します。' },
+  C13: { problem:'体格が標準範囲から外れており、全身の発育やお口の機能に影響する可能性があります。', shortTerm:'体格指数を算出し、食事の見直しを指導します。', longTerm:'小児科と連携し、成長を定期的にフォローします。' },
+  C14: { problem:'口呼吸により歯列が狭くなり、上あごの成長が不十分になるおそれがあります。', shortTerm:'鼻呼吸の練習を行い、必要に応じて耳鼻科受診をおすすめします。', longTerm:'上あごを広げる装置をご提案します。' },
+  C15: { problem:'口蓋扁桃の肥大により、口呼吸や睡眠障害につながるおそれがあります。', shortTerm:'耳鼻科への紹介と睡眠時無呼吸の評価を行います。', longTerm:'必要に応じて手術適応を検討します。' },
+  C16: { problem:'睡眠の質が低下し、あごの発育への影響が懸念されます。', shortTerm:'睡眠状態の評価と口呼吸の改善を行い、必要に応じて呼吸の改善につながる上あごを広げる装置をご提案します。', longTerm:'専門医と連携し、睡眠の質を継続的に評価します。' },
+  C17: { problem:'', shortTerm:'', longTerm:'' },
 };
 
 // ==================== UTILITIES ====================
@@ -776,7 +781,7 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
         })}
 
         <div className="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
-          <div className="bg-gray-700 text-white px-4 py-2 text-sm font-bold">C-17 総合管理計画</div>
+          <div className="bg-gray-700 text-white px-4 py-2 text-sm font-bold">総合管理計画</div>
           <div className="p-4">
             <textarea value={overallPlan} onChange={e=>setOverallPlan(e.target.value)}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none" rows={6}/>
@@ -896,7 +901,7 @@ function PrintView({ patient, assessment, onClose }) {
         )}
 
         <div style={{border:'2px solid #374151',borderRadius:'8px',padding:'12px',marginBottom:'12px'}}>
-          <h3 style={{fontSize:'13px',fontWeight:'bold',marginBottom:'8px',color:'#374151'}}>C-17 総合管理計画</h3>
+          <h3 style={{fontSize:'13px',fontWeight:'bold',marginBottom:'8px',color:'#374151'}}>総合管理計画</h3>
           <div style={{fontSize:'12px',whiteSpace:'pre-line'}}>{assessment.overallPlan || ''}</div>
         </div>
 
