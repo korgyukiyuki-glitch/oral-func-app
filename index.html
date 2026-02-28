@@ -78,11 +78,12 @@ const CHECK_ITEMS = [
   { code:'C8', label:'食事は1日3回・決まった量を食べられていない', category:'eat', type:'patient', inputType:'yesno' },
   { code:'C9', label:'会話時に聞き取りづらい', category:'speak', type:'patient', inputType:'yesno' },
   { code:'C7', label:'舌の突出癖がある', category:'other', type:'clinic', inputType:'toggle' },
-  { code:'C10', label:'口を開けている・口呼吸がある', category:'other', type:'patient', inputType:'yesno' },
-  { code:'C11', label:'口腔習癖がある', category:'other', type:'patient', inputType:'habits' },
-  { code:'C12', label:'舌小帯に異常がある', category:'other', type:'clinic', inputType:'toggle' },
-  { code:'C15', label:'口蓋扁桃肥大を認める', category:'other', type:'clinic', inputType:'toggle' },
-  { code:'C16', label:'いびきをかく', category:'other', type:'patient', inputType:'yesno' },
+  { code:'C10', label:'口唇の閉鎖不全がある', category:'speak', type:'clinic', inputType:'toggle' },
+  { code:'C11', label:'口腔習癖がある', category:'speak', type:'patient', inputType:'habits' },
+  { code:'C12', label:'舌小帯に異常がある', category:'speak', type:'clinic', inputType:'toggle' },
+  { code:'C14', label:'口呼吸がある', category:'other', type:'patient', inputType:'yesno' },
+  { code:'C15', label:'口蓋扁桃等に肥大がある', category:'other', type:'clinic', inputType:'toggle' },
+  { code:'C16', label:'睡眠時のいびきがある', category:'other', type:'patient', inputType:'yesno' },
   { code:'C13', label:'やせ、または肥満である', category:'body', type:'patient', inputType:'body' },
 ];
 
@@ -109,7 +110,8 @@ const PLAN_TEMPLATES = {
   C7:  { problem:'舌の裏のすじが短く、舌の動きが制限され発音に影響することがあります。', shortTerm:'舌を動かすトレーニングを行います。', longTerm:'改善が不十分な場合、切除手術を検討します。' },
   C8:  { problem:'間食の回数が多く、むし歯になりやすい状態です。', plan:'おやつの回数・タイミング・飲み物の選び方を指導します。' },
   C9:  { problem:'舌の機能不足により、発音が不明瞭になっている可能性があります。', plan:'舌の力の検査とお口の筋肉トレーニング（MFT）を行います。' },
-  C10: { problem:'口呼吸により歯列が狭くなり、上あごの成長が不十分になるおそれがあります。', shortTerm:'鼻呼吸の練習を行い、必要に応じて耳鼻科受診をおすすめします。', longTerm:'上あごを広げる装置をご提案します。' },
+  C10: { problem:'安静時に口唇が閉じておらず、口腔機能や歯列の発育に影響するおそれがあります。', shortTerm:'口唇閉鎖力の訓練（MFT・ボタンプル等）を行います。', longTerm:'口唇閉鎖の習慣化を目指し、3か月ごとに再評価します。' },
+  C14: { problem:'口呼吸により歯列が狭くなり、上あごの成長が不十分になるおそれがあります。', shortTerm:'鼻呼吸の練習を行い、必要に応じて耳鼻科受診をおすすめします。', longTerm:'上あごを広げる装置をご提案します。' },
   C11: { problem:'指しゃぶり等の癖が歯並びを乱す原因になっています。', plan:'癖をなくす指導とトレーニング表をお渡しし、ご家庭と連携して改善を目指します。' },
   C12: { problem:'舌の裏のすじに異常があり、舌の機能が制限されています。', shortTerm:'舌の機能を評価しトレーニングを行います。', longTerm:'改善不十分な場合は外科的処置を検討します。' },
   C13: { problem:'体格が標準範囲から外れており、全身の発育やお口の機能に影響する可能性があります。', plan:'体格指数を算出し、食事の見直しを指導します。' },
@@ -538,7 +540,7 @@ function AssessmentForm({ patient, existingAssessment, onSave, onCancel }) {
 
   const [checks, setChecks] = useState(existingAssessment?.checks || {
     C1:false,C2:false,C3:false,C4:false,C5:false,C6:false,C7:false,C8:false,
-    C9:false,C10:false,C11:[],C11_has:existingAssessment?.checks?.C11?.length > 0 ? true : null,C12:false,C13:bodyStatus,C13_patient:null,C15:false,C16:false
+    C9:false,C10:false,C11:[],C11_has:existingAssessment?.checks?.C11?.length > 0 ? true : null,C12:false,C13:bodyStatus,C13_patient:null,C14:false,C15:false,C16:false
   });
   const [lipForce, setLipForce] = useState(existingAssessment?.lipForce || '');
   const [tonguePressure, setTonguePressure] = useState(existingAssessment?.tonguePressure || '');
@@ -777,7 +779,8 @@ function ManagementPlan({ patient, assessment, onSave, onBack, onPrint }) {
     const has = (arr) => arr.some(c => codes.includes(c));
     if (has(['C1','C2','C3','C4','C5','C6'])) lines.push('噛む機能の改善と咬合育成を行います。');
     if (has(['C7','C9','C12'])) lines.push('舌の機能訓練（MFT）を実施します。');
-    if (has(['C10','C15','C16'])) lines.push('鼻呼吸への改善指導を行い、必要に応じて耳鼻科受診のご案内や上あごを広げる装置をご提案します。');
+    if (has(['C10'])) lines.push('口唇閉鎖力の改善訓練を行います。');
+    if (has(['C14','C15','C16'])) lines.push('鼻呼吸への改善指導を行い、必要に応じて耳鼻科受診のご案内や上あごを広げる装置をご提案します。');
     if (has(['C11'])) lines.push('口腔習癖の除去指導を行います。');
     if (has(['C8'])) lines.push('食事・間食指導を行います。');
     if (has(['C13'])) lines.push('栄養指導と体格管理を行います。');
